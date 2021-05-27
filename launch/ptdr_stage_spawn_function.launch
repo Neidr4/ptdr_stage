@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ================================== -->
+    <!-- ============ Variables =========== -->
+    <!-- ================================== -->
+    
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+    <arg name="move_forward_only" default="false"/>
+
+    <arg name="robot_namespace"/>
+    <arg name="init_x_pos" default="0.0"/>
+    <arg name="init_y_pos" default="0.0"/>
+    <arg name="init_z_pos" default="0.0"/>
+    <arg name="init_yaw" default="0.0"/>
+
+    <arg name="robot_description_file" default="$(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro"/>
+
+    <arg name="map_file" default="$(find ptdr_stage)/maps/map_empty.yaml"/>
+
+    <arg name="base" default="$(optenv TURTLEBOT_BASE kobuki)"/>  <!-- create, rhoomba -->
+    <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
+    <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
+
+
+    <!-- ================================== -->
+    <!-- ============ Function =========== -->
+    <!-- ================================== -->
+  
+    <group ns="$(arg robot_namespace)">
+
+        <!-- ================================== -->
+        <!-- ============ Xacro call ========== -->
+        <!-- ================================== -->
+
+        <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg robot_description_file)" />
+
+        <!-- ================================== -->
+        <!-- =========== Stage spawn ========= -->
+        <!-- ================================== -->
+
+        <include file="$(find turtlebot_bringup)/launch/includes/robot.launch.xml">
+            <arg name="base" value="$(arg base)" />
+            <arg name="stacks" value="$(arg stacks)" />
+            <arg name="3d_sensor" value="$(arg 3d_sensor)" />
+        </include>
+
+        <!-- ================================== -->
+        <!-- ========== TF with prefix ======== -->
+        <!-- ================================== -->
+
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher_$(arg robot_namespace)" output="screen">
+            <param name="publish_frequency" type="double" value="50.0" />
+            <param name="tf_prefix" value="$(arg robot_namespace)" />
+        </node>
+
+        <!-- ================================== -->
+        <!-- =============== amcl ============= -->
+        <!-- ================================== -->
+
+        <node pkg="amcl" type="amcl" name="amcl">
+            <!-- Load default parameters for turtlebot -->
+            <rosparam file="$(find ptdr_stage)/params/amcl.yaml" command="load" />
+            <param name="initial_pose_x" value="$(arg init_x_pos)"/>
+            <param name="initial_pose_y" value="$(arg init_y_pos)"/>
+            <param name="initial_pose_a" value="$(arg init_yaw)"/>
+
+            <param name="odom_frame_id"  value="$(arg robot_namespace)/odom"/>
+            <param name="base_frame_id"  value="$(arg robot_namespace)/base_footprint"/>
+
+            <!-- Use the single map server -->
+            <remap from="static_map" to="/static_map"/>
+        </node>
+
+
+        <!-- ================================== -->
+        <!-- ============ map_server ========== -->
+        <!-- ================================== -->
+
+        <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+        <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg robot_namespace)_tf_broadcaster"  args="0 0 0 0 0 0 /map /$(arg robot_namespace)/map 100"/>
+
+        <node pkg="gmapping" type="slam_gmapping" name="gmapping_thing" output="screen" >
+            <param name="map_frame" value="map"/>
+            <param name="scan" value="$(arg robot_namespace)/scan"/>
+            <param name="odom_frame" value="$(arg robot_namespace)/odom"/>
+            <param name="base_frame" value="$(arg robot_namespace)/base_link"/>
+            <param name="map_update_interval" value="1" />
+            <param name="xmin" value="-100" />
+            <param name="xmax" value="100" />
+            <param name="ymin" value="-100" />
+            <param name="ymax" value="100" />
+        </node>
+
+        <!-- ================================== -->
+        <!-- ============ move_base =========== -->
+        <!-- ================================== -->
+
+        <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen">
+            <!-- Default configs form the TB3 repos -->
+            <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+            <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+            <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+            <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
+            <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
+            <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
+            <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
+
+            <!-- Set tf_prefix for frames explicity, overwriting defaults -->
+            <param name="global_costmap/scan/sensor_frame" value="$(arg robot_namespace)/base_scan"/>
+            <param name="global_costmap/obstacle_layer/scan/sensor_frame" value="$(arg robot_namespace)/base_scan"/>
+            <param name="global_costmap/global_frame" value="map"/>
+            <param name="global_costmap/robot_base_frame" value="$(arg robot_namespace)/base_footprint"/>
+            <param name="local_costmap/scan/sensor_frame" value="$(arg robot_namespace)/base_scan"/>
+            <param name="local_costmap/obstacle_layer/scan/sensor_frame" value="$(arg robot_namespace)/base_scan"/>
+            <param name="local_costmap/global_frame" value="$(arg robot_namespace)/odom"/>
+            <param name="local_costmap/robot_base_frame" value="$(arg robot_namespace)/base_footprint"/>
+
+            <!-- Centralized map server -->
+            <remap from="map" to="/map"/>
+            <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
+        </node>
+
+    </group>
+  
+</launch>

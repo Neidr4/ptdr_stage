@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- ================================== -->
+    <!-- ============ Variables =========== -->
+    <!-- ================================== -->
+
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+
+    <!-- arg name="map_file" default="$(find ptdr)/maps/map.yaml"/-->
+
+    <!-- arg name="world_file" default="$(find ptdr)/worlds/search_and_rescue_world.world"/-->
+
+    <arg name="namespace_0"  default="robot_0"/>
+    <arg name="namespace_1"  default="robot_1"/>
+    <arg name="namespace_2"  default="robot_2"/>
+    
+    <arg name="namespace_0_x_pos" default="0.0"/>
+    <arg name="namespace_0_y_pos" default="0.0"/>
+    <arg name="namespace_0_z_pos" default="0.0"/>
+    <arg name="namespace_0_yaw" default="0.0"/>
+
+    <arg name="namespace_1_x_pos" default="1.0"/>
+    <arg name="namespace_1_y_pos" default="1.0"/>
+    <arg name="namespace_1_z_pos" default="0.0"/>
+    <arg name="namespace_1_yaw" default="0.0"/>
+
+    <arg name="namespace_2_x_pos" default="2.0"/>
+    <arg name="namespace_2_y_pos" default="2.0"/>
+    <arg name="namespace_2_z_pos" default="0.0"/>
+    <arg name="namespace_2_yaw" default="0.0"/>
+
+    <arg name="base" default="$(optenv TURTLEBOT_BASE kobuki)"/>  <!-- create, rhoomba -->
+    <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
+    <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
+
+    <arg name="map_file"       default="$(find ptdr)/maps/map.yaml"/> <!-- robopark_plan -->
+    <arg name="world_file"     default=" $(env TURTLEBOT_STAGE_WORLD_FILE)"/>
+
+
+    <!-- ================================== -->
+    <!-- ============== Stage ============= -->
+    <!-- ================================== -->
+
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)"/>
+
+    <param name="/use_sim_time" value="true" />
+
+
+    <!-- ================================== -->
+    <!-- ============= Robot_0 ============ -->
+    <!-- ================================== -->
+
+    <include file="$(find ptdr)/launch/ptdr_spawn_function_stage.launch">
+        <arg name="robot_namespace" value="$(arg namespace_0)" />
+        
+        <arg name="init_x_pos" value="$(arg namespace_0_x_pos)"/>
+        <arg name="init_y_pos" value="$(arg namespace_0_y_pos)"/>
+        <arg name="init_z_pos" value="$(arg namespace_0_z_pos)"/>
+        <arg name="init_yaw"   value="$(arg namespace_0_yaw)"  />
+
+        <arg name="robot_description_file" value="$(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro"/>
+        
+    </include>
+
+
+    <!-- ================================== -->
+    <!-- ============= Robot_1 ============ -->
+    <!-- ================================== -->
+
+    <include file="$(find ptdr)/launch/ptdr_spawn_function_stage.launch">
+        <arg name="robot_namespace" value="$(arg namespace_1)" />
+        <arg name="init_x_pos" value="$(arg namespace_1_x_pos)"/>
+        <arg name="init_y_pos" value="$(arg namespace_1_y_pos)"/>
+        <arg name="init_z_pos" value="$(arg namespace_1_z_pos)"/>
+        <arg name="init_yaw"   value="$(arg namespace_1_yaw)"  />
+    </include>
+
+
+    <!-- ================================== -->
+    <!-- ============= Robot_2 ============ -->
+    <!-- ================================== -->
+
+    <include file="$(find ptdr)/launch/ptdr_spawn_function_stage.launch">
+        <arg name="robot_namespace" value="$(arg namespace_2)" />
+        <arg name="init_x_pos" value="$(arg namespace_2_x_pos)"/>
+        <arg name="init_y_pos" value="$(arg namespace_2_y_pos)"/>
+        <arg name="init_z_pos" value="$(arg namespace_2_z_pos)"/>
+        <arg name="init_yaw"   value="$(arg namespace_2_yaw)"  />
+    </include>
+
+
+    <!-- ================================== -->
+    <!-- ============== Maps ============== -->
+    <!-- ================================== -->
+
+    <node pkg="tf" type="static_transform_publisher" name="world_to_map_tf_broadcaster" args="0 0 0 0 0 0 /world /map 100"/>
+
+    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+<!--    
+    <node pkg="multirobot_map_merge" type="map_merge" respawn="false" name="map_merge" output="screen">
+        <param name="robot_map_topic" value="map"/>
+        <param name="robot_namespace" value="robot"/>
+        <param name="merged_map_topic" value="map"/>
+        <param name="world_frame" value="map"/>
+        <param name="known_init_poses" value="false"/>
+        <param name="merging_rate" value="4"/>
+        <param name="discovery_rate" value="0.05"/>
+        <param name="estimation_rate" value="0.1"/>
+        <param name="estimation_confidence" value="1.0"/>
+    </node>
+-->
+
+    <!-- ================================== -->
+    <!-- ============== Rviz ============== -->
+    <!-- ================================== -->
+
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d $(find ptdr)/config/rviz_simple.rviz"/>
+
+</launch>
