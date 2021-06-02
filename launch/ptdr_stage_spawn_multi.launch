@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- ================================== -->
+  <!-- ============ Variables =========== -->
+  <!-- ================================== -->
+
+  <arg name="namespace_0"  default="robot_0"/>
+  <arg name="namespace_1"  default="robot_1"/>
+  <arg name="namespace_2"  default="robot_2"/>
+  
+  <arg name="namespace_0_x_pos" default="3.0"/>
+  <arg name="namespace_0_y_pos" default="3.0"/>
+  <arg name="namespace_0_z_pos" default="0.0"/>
+  <arg name="namespace_0_yaw"   default="0.0"/>
+
+  <arg name="namespace_1_x_pos" default="3.0"/>
+  <arg name="namespace_1_y_pos" default="1.0"/>
+  <arg name="namespace_1_z_pos" default="0.0"/>
+  <arg name="namespace_1_yaw"   default="0.0"/>
+
+  <arg name="namespace_2_x_pos" default="1.0"/>
+  <arg name="namespace_2_y_pos" default="3.0"/>
+  <arg name="namespace_2_z_pos" default="0.0"/>
+  <arg name="namespace_2_yaw"   default="0.0"/>
+
+  <!-- Name of the map to use (without path nor extension) and initial position -->
+  <!--
+  <arg name="map_file"       default=" $(find multi_robot_stage)/maps/three_rooms.yaml"/>
+  <arg name="world_file"     default=" $(find multi_robot_stage)/maps/stage/three_rooms.world"/>
+  -->
+  <arg name="map_file"       default="$(find ptdr_stage)/maps/maze2.yaml"/>
+  <arg name="world_file"     default=" $(find ptdr_stage)/worlds/maze2.world"/>
+
+  <arg name="base"       default="$(optenv TURTLEBOT_BASE kobuki)"/>  <!-- create, rhoomba -->
+  <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
+  <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
+
+
+  <!-- ================================== -->
+  <!-- =========== Environment ========== -->
+  <!-- ================================== -->
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+    <param name="frame_id" value="/map"/>
+  </node>
+  
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
+    
+  </node>
+
+
+  <!-- ================================== -->
+  <!-- =========== Robot model ========== -->
+  <!-- ================================== -->
+  
+  <!-- ============= robot_0 ============ -->
+
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_spawn_multi_function.launch">
+
+    <arg name="robot_namespace" value="$(arg namespace_0)" />
+    
+    <arg name="init_x_pos" value="$(arg namespace_0_x_pos)"/>
+    <arg name="init_y_pos" value="$(arg namespace_0_y_pos)"/>
+    <arg name="init_z_pos" value="$(arg namespace_0_z_pos)"/>
+    <arg name="init_yaw"   value="$(arg namespace_0_yaw)"  />
+      
+  </include>
+
+  <!-- ============= robot_1 ============ -->
+
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_spawn_multi_function.launch">
+
+    <arg name="robot_namespace" value="$(arg namespace_1)" />
+    
+    <arg name="init_x_pos" value="$(arg namespace_1_x_pos)"/>
+    <arg name="init_y_pos" value="$(arg namespace_1_y_pos)"/>
+    <arg name="init_z_pos" value="$(arg namespace_1_z_pos)"/>
+    <arg name="init_yaw"   value="$(arg namespace_1_yaw)"  />
+      
+  </include>
+
+  <!-- ============= robot_2 ============ -->
+
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_spawn_multi_function.launch">
+
+    <arg name="robot_namespace" value="$(arg namespace_2)" />
+    
+    <arg name="init_x_pos" value="$(arg namespace_2_x_pos)"/>
+    <arg name="init_y_pos" value="$(arg namespace_2_y_pos)"/>
+    <arg name="init_z_pos" value="$(arg namespace_2_z_pos)"/>
+    <arg name="init_yaw"   value="$(arg namespace_2_yaw)"  />
+      
+  </include>
+
+
+  <!-- ================================== -->
+  <!-- ============= Display ============ -->
+  <!-- ================================== -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ptdr_stage)/config/rviz_multi.rviz"/>
+
+</launch>
