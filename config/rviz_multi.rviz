@@ -7,15 +7,15 @@ Panels:
         - /Grid1/Offset1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /robot_01/ParticleCloud1
         - /robot_01/Local Planning1/Costmap1
-        - /robot_11/ParticleCloud1
         - /robot_11/RobotModel1/TF Prefix1
-        - /robot_11/Local Planning1
         - /robot_11/Global Planning1
         - /robot_11/Path (global)1
+        - /robot_21/Pose (move_base)1
         - /robot_21/ParticleCloud1
         - /robot_21/Global Planning1
+        - /Map2
+        - /Map2/Status1
       Splitter Ratio: 0.5
     Tree Height: 787
   - Class: rviz/Selection
@@ -66,6 +66,10 @@ Visualization Manager:
         All Enabled: false
         map:
           Value: true
+        map_gmapping:
+          Value: true
+        odom:
+          Value: true
         robot_0/base_footprint:
           Value: true
         robot_0/base_laser_link:
@@ -93,6 +97,8 @@ Visualization Manager:
         robot_0/cliff_sensor_right_link:
           Value: true
         robot_0/gyro_link:
+          Value: true
+        robot_0/map_gmapping:
           Value: true
         robot_0/mount_asus_xtion_pro_link:
           Value: true
@@ -168,6 +174,8 @@ Visualization Manager:
           Value: true
         robot_1/gyro_link:
           Value: true
+        robot_1/map_gmapping:
+          Value: true
         robot_1/mount_asus_xtion_pro_link:
           Value: true
         robot_1/odom:
@@ -242,6 +250,8 @@ Visualization Manager:
           Value: true
         robot_2/gyro_link:
           Value: true
+        robot_2/map_gmapping:
+          Value: true
         robot_2/mount_asus_xtion_pro_link:
           Value: true
         robot_2/odom:
@@ -295,6 +305,8 @@ Visualization Manager:
       Show Names: false
       Tree:
         map:
+          robot_0/map_gmapping:
+            {}
           robot_0/odom:
             robot_0/base_footprint:
               robot_0/base_link:
@@ -364,6 +376,8 @@ Visualization Manager:
                   {}
                 robot_0/wheel_right_link:
                   {}
+          robot_1/map_gmapping:
+            {}
           robot_1/odom:
             robot_1/base_footprint:
               robot_1/base_link:
@@ -433,6 +447,8 @@ Visualization Manager:
                   {}
                 robot_1/wheel_right_link:
                   {}
+          robot_2/map_gmapping:
+            {}
           robot_2/odom:
             robot_2/base_footprint:
               robot_2/base_link:
@@ -520,7 +536,7 @@ Visualization Manager:
           Axes Length: 1
           Axes Radius: 0.100000001
           Class: rviz/Pose
-          Color: 0; 0; 255
+          Color: 255; 0; 0
           Enabled: true
           Head Length: 0.200000003
           Head Radius: 0.100000001
@@ -904,7 +920,7 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 0; 0; 255
+          Color: 255; 0; 0
           Enabled: true
           Head Diameter: 0.300000012
           Head Length: 0.200000003
@@ -988,7 +1004,7 @@ Visualization Manager:
           Axes Length: 1
           Axes Radius: 0.100000001
           Class: rviz/Pose
-          Color: 255; 255; 0
+          Color: 0; 255; 0
           Enabled: true
           Head Length: 0.200000003
           Head Radius: 0.100000001
@@ -1372,7 +1388,7 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 255; 255; 0
+          Color: 0; 255; 0
           Enabled: true
           Head Diameter: 0.300000012
           Head Length: 0.200000003
@@ -1400,7 +1416,7 @@ Visualization Manager:
           Axes Length: 1
           Axes Radius: 0.100000001
           Class: rviz/Pose
-          Color: 0; 255; 0
+          Color: 0; 0; 255
           Enabled: true
           Head Length: 0.200000003
           Head Radius: 0.100000001
@@ -1784,7 +1800,7 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 25; 255; 0
+          Color: 0; 0; 255
           Enabled: true
           Head Diameter: 0.300000012
           Head Length: 0.200000003
@@ -1806,6 +1822,16 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: robot_2
+    - Alpha: 0.699999988
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /robot_0/map
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -1827,11 +1853,12 @@ Visualization Manager:
     - Class: rviz/SetGoal
       Topic: /robot_2/move_base_simple/goal
     - Class: rviz/SetGoal
+      Topic: goal
   Value: true
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 15.2109003
+      Distance: 15.8015604
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
