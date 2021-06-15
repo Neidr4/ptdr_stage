@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<launch>
+
+    <param name="/use_sim_time" value="true" />
+
+    <arg name="namespace_0" default="robot_0"/>
+    <arg name="namespace_1" default="robot_1"/>
+    <arg name="namespace_2" default="robot_2"/>
+
+    <arg name="namespace_0_x_pos" value="0.0"/>
+    <arg name="namespace_0_y_pos" value="0.0"/>
+    <arg name="namespace_0_z_pos" value="0.0"/>
+    <arg name="namespace_0_yaw"   value="0.0"/>
+
+    <arg name="namespace_1_x_pos" value="0.0"/>
+    <arg name="namespace_1_y_pos" value="40.0"/>
+    <arg name="namespace_1_z_pos" value="0.0"/>
+    <arg name="namespace_1_yaw"   value="0.0"/>
+
+    <arg name="namespace_2_x_pos" value="40.0"/>
+    <arg name="namespace_2_y_pos" value="0.0"/>
+    <arg name="namespace_2_z_pos" value="0.0"/>
+    <arg name="namespace_2_yaw"   value="0.0"/>
+
+    <arg name="map_file_empty"    default="$(find ptdr_stage)/maps/map_empty.yaml"/>
+
+    <!--
+    <node name="map_server_merged" pkg="map_server" type="map_server" args="$(arg map_file_empty)">
+      <param name="frame_id" value="map_merged"/>
+    </node>
+    -->
+
+    <group ns="$(arg namespace_0)/map_merge">
+        <param name="init_pose_x"     value="$(arg namespace_0_x_pos)"/>
+        <param name="init_pose_y"     value="$(arg namespace_0_y_pos)"/>
+        <param name="init_pose_z"     value="$(arg namespace_0_z_pos)"/>
+        <param name="init_pose_yaw"   value="$(arg namespace_0_yaw)"  />
+    </group>
+
+    <group ns="$(arg namespace_1)/map_merge">
+        <param name="init_pose_x"     value="$(arg namespace_1_x_pos)"/>
+        <param name="init_pose_y"     value="$(arg namespace_1_y_pos)"/>
+        <param name="init_pose_z"     value="$(arg namespace_1_z_pos)"/>
+        <param name="init_pose_yaw"   value="$(arg namespace_1_yaw)"  />
+    </group>
+
+    <group ns="$(arg namespace_2)/map_merge">
+        <param name="init_pose_x"     value="$(arg namespace_2_x_pos)"/>
+        <param name="init_pose_y"     value="$(arg namespace_2_y_pos)"/>
+        <param name="init_pose_z"     value="$(arg namespace_2_z_pos)"/>
+        <param name="init_pose_yaw"   value="$(arg namespace_2_yaw)"  />
+    </group>
+
+    <node pkg="multirobot_map_merge" type="map_merge" respawn="false" name="map_merge" output="screen">
+        <param name="robot_map_topic" value="map"/>
+        <param name="robot_namespace" value="robot_"/>
+        <param name="merged_map_topic" value="map_merged"/>
+        <param name="world_frame" value="world"/>
+        <param name="known_init_poses" value="true"/>
+        <param name="merging_rate" value="0.5"/>
+        <param name="discovery_rate" value="0.05"/>
+        <param name="estimation_rate" value="0.5"/>
+        <param name="estimation_confidence" value="1.0"/>
+    </node>
+
+    <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_0)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_0)/map 100"/ -->
+    <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_1)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_1)/map 100"/ -->
+    <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_2)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_2)/map 100"/ -->
+    <node pkg="tf" type="static_transform_publisher" name="map_to_map_merged_tf_broadcaster" args="0 0 0 0 0 0 /world /map_merged 100"/>
+    <!--
+    <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_0)_tf_broadcaster" args="0 0 0 0 0 0 /world /$(arg namespace_0)/map 100"/>
+    <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_1)_tf_broadcaster" args="0 0 0 0 0 0 /world /$(arg namespace_1)/map 100"/>
+    <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_2)_tf_broadcaster" args="0 0 0 0 0 0 /world /$(arg namespace_2)/map 100"/>
+    -->
+    <!-- node pkg="tf" type="static_transform_publisher" name="map_to_map_fused" args="-100 -100 0 0 0 0 /map /map_fused 100"/ -->
+
+</launch>

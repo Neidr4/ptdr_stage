@@ -31,6 +31,7 @@
   -->
   <arg name="map_file"       default="$(find ptdr_stage)/maps/maze2.yaml"/>
   <arg name="world_file"     default=" $(find ptdr_stage)/worlds/maze2.world"/>
+  <arg name="map_file_empty"    default="$(find ptdr_stage)/maps/map_empty.yaml"/>
 
   <arg name="base"       default="$(optenv TURTLEBOT_BASE kobuki)"/>  <!-- create, rhoomba -->
   <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
@@ -44,8 +45,10 @@
   <param name="/use_sim_time" value="true"/>
   
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
-    <param name="frame_id" value="/map"/>
+    <param name="frame_id" value="/map_bonsoir"/>
   </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map_tf_broadcaster" args="0 0 0 0 0 0 /world /map 100"/>
   
   <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
     
