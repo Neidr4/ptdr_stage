@@ -7,18 +7,18 @@
     <arg name="namespace_1" default="robot_1"/>
     <arg name="namespace_2" default="robot_2"/>
 
-    <arg name="namespace_0_x_pos" value="0.0"/>
-    <arg name="namespace_0_y_pos" value="0.0"/>
+    <arg name="namespace_0_x_pos" value="-90.0"/>
+    <arg name="namespace_0_y_pos" value="-90.0"/>
     <arg name="namespace_0_z_pos" value="0.0"/>
     <arg name="namespace_0_yaw"   value="0.0"/>
 
-    <arg name="namespace_1_x_pos" value="0.0"/>
-    <arg name="namespace_1_y_pos" value="40.0"/>
+    <arg name="namespace_1_x_pos" value="-90.0"/>
+    <arg name="namespace_1_y_pos" value="90.0"/>
     <arg name="namespace_1_z_pos" value="0.0"/>
     <arg name="namespace_1_yaw"   value="0.0"/>
 
-    <arg name="namespace_2_x_pos" value="40.0"/>
-    <arg name="namespace_2_y_pos" value="0.0"/>
+    <arg name="namespace_2_x_pos" value="90.0"/>
+    <arg name="namespace_2_y_pos" value="90.0"/>
     <arg name="namespace_2_z_pos" value="0.0"/>
     <arg name="namespace_2_yaw"   value="0.0"/>
 
@@ -32,7 +32,7 @@
 
     <group ns="$(arg namespace_0)/map_merge">
         <param name="init_pose_x"     value="$(arg namespace_0_x_pos)"/>
-        <param name="init_pose_y"     value="$(arg namespace_0_y_pos)"/>
+        <param name="init_pose_y"     value="$(arg namespace_0_y_pos)"/>4
         <param name="init_pose_z"     value="$(arg namespace_0_z_pos)"/>
         <param name="init_pose_yaw"   value="$(arg namespace_0_yaw)"  />
     </group>
@@ -66,7 +66,7 @@
     <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_0)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_0)/map 100"/ -->
     <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_1)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_1)/map 100"/ -->
     <!-- node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_2)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg namespace_2)/map 100"/ -->
-    <node pkg="tf" type="static_transform_publisher" name="map_to_map_merged_tf_broadcaster" args="0 0 0 0 0 0 /world /map_merged 100"/>
+    <node pkg="tf" type="static_transform_publisher" name="world_to_map_merged_tf_broadcaster" args="0 0 0 0 0 0 /world /map_merged 100"/>
     <!--
     <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_0)_tf_broadcaster" args="0 0 0 0 0 0 /world /$(arg namespace_0)/map 100"/>
     <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg namespace_1)_tf_broadcaster" args="0 0 0 0 0 0 /world /$(arg namespace_1)/map 100"/>
