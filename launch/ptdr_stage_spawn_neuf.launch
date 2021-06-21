@@ -61,18 +61,7 @@
   <!-- =========== Robot model ========== -->
   <!-- ================================== -->
   
-  <!-- ============= robot_0 ============ -->
-
-  <include file="$(find ptdr_stage)/launch/ptdr_stage_spawn_neuf_function.launch">
-
-    <arg name="robot_namespace" value="$(arg namespace_0)" />
-    
-    <arg name="init_x_pos" value="$(arg namespace_0_x_pos)"/>
-    <arg name="init_y_pos" value="$(arg namespace_0_y_pos)"/>
-    <arg name="init_z_pos" value="$(arg namespace_0_z_pos)"/>
-    <arg name="init_yaw"   value="$(arg namespace_0_yaw)"  />
-      
-  </include>
+  
 
   <!-- ============= robot_1 ============ -->
 
@@ -100,13 +89,26 @@
       
   </include>
 
+  <!-- ============= robot_0 ============ -->
+
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_spawn_neuf_function.launch">
+
+    <arg name="robot_namespace" value="$(arg namespace_0)" />
+    
+    <arg name="init_x_pos" value="$(arg namespace_0_x_pos)"/>
+    <arg name="init_y_pos" value="$(arg namespace_0_y_pos)"/>
+    <arg name="init_z_pos" value="$(arg namespace_0_z_pos)"/>
+    <arg name="init_yaw"   value="$(arg namespace_0_yaw)"  />
+      
+  </include>
+
 
   <!-- ================================== -->
   <!-- =========== Merge Maps =========== -->
   <!-- ================================== -->
   <!--
-  <include file="$(find ptdr_stage)/launch/ptdr_stage_map_merge.launch"/>
   -->
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_map_merge.launch"/>
 
   <!-- ================================== -->
   <!-- ============= Display ============ -->
