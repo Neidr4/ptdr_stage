@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Grid1
         - /Grid1/Offset1
         - /TF1/Frames1
         - /TF1/Tree1
@@ -12,8 +13,6 @@ Panels:
         - /robot_11/Global Planning1
         - /robot_11/Path (global)1
         - /robot_21/Global Planning1
-        - /map_merged1
-        - /Map2
       Splitter Ratio: 0.502777755
     Tree Height: 843
   - Class: rviz/Selection
@@ -22,6 +21,7 @@ Panels:
     Expanded:
       - /2D Pose Estimate1
       - /2D Nav Goal1
+      - /Publish Point1
     Name: Tool Properties
     Splitter Ratio: 0.588679016
   - Class: rviz/Views
@@ -50,8 +50,8 @@ Visualization Manager:
       Name: Grid
       Normal Cell Count: 0
       Offset:
-        X: 5
-        Y: 5
+        X: 0
+        Y: 0
         Z: 0
       Plane: XY
       Plane Cell Count: 10
@@ -75,12 +75,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map
       Topic: /map
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -1408,6 +1408,22 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /centroids
+      Name: Marker
+      Namespaces:
+        markers3: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /global_rrt_detector_shapes
+      Name: Marker
+      Namespaces:
+        markers: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -1428,20 +1444,23 @@ Visualization Manager:
       Topic: /robot_1/move_base_simple/goal
     - Class: rviz/SetGoal
       Topic: /robot_2/move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
   Value: true
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 30.9370537
+      Distance: 21.082737
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.36583829
-        Y: -0.414428204
-        Z: -0.517694175
+        X: 1.56967199
+        Y: -0.893348038
+        Z: -0.518172264
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
