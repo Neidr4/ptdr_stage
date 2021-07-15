@@ -25,7 +25,7 @@
     <!-- =============== Map ============== -->
     <!-- ================================== -->
 
-    <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="$(arg init_x_pos) $(arg init_y_pos) 0 $(arg init_yaw) 0 0 /world $(arg robot_namespace)/map 100"/>
+    <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg robot_namespace)_map_tf_broadcaster" args="$(arg init_x_pos) $(arg init_y_pos) 0 $(arg init_yaw) 0 0 /world $(arg robot_namespace)/map 100"/>
 
     <!-- node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="0 0 0 0 0 0 /world $(arg robot_namespace)/map 100"/ -->
 
@@ -68,8 +68,10 @@
       <param name="ymin" value="-15.0"/>
       <param name="xmax" value="10.0"/>
       <param name="ymax" value="10.0"/>
+      <param name="xcenter" value="10.0"/>
+      <param name="ycenter" value="10.0"/>
 
-      <param name="delta" value="0.05"/>
+      <param name="delta" value="0.01"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>
@@ -80,7 +82,7 @@
 
     <group ns="/map_merge">
         <param name="init_pose_x"     value="$(arg init_x_pos)"/>
-        <param name="init_pose_y"     value="$(arg init_y_pos)"/>4
+        <param name="init_pose_y"     value="$(arg init_y_pos)"/>
         <param name="init_pose_z"     value="$(arg init_z_pos)"/>
         <param name="init_pose_yaw"   value="$(arg init_yaw)"  />
     </group>
@@ -111,8 +113,10 @@
     <!-- ============== amcl ============== -->
     <!-- ================================== -->
 
-    <arg name="urdf_file" default="$(find xacro)/xacro.py --inorder '$(find turtlebot_description)/robots/$(arg base)_$(arg stacks)_$(arg 3d_sensor).urdf.xacro'" />
+    <!--
+    <arg name="urdf_file" default="$(find xacro)/xacro.py inorder '$(find turtlebot_description)/robots/$(arg base)_$(arg stacks)_$(arg 3d_sensor).urdf.xacro'" />
     <param name="robot_description" command="$(arg urdf_file)" />
+    -->
 
     <!-- working version with the true as root/map as map topic -->
     <param name="amcl/initial_pose_x" value="$(arg init_x_pos)" />
@@ -143,9 +147,11 @@
       <remap from="map"                       to="/map" />
     </node>
 
+    <!--
     <node name="robot_pose_publisher_$(arg robot_namespace)" pkg="robot_pose_publisher" type="robot_pose_publisher" output="screen">      
       <param name="base_frame"             value="$(arg robot_namespace)/base_footprint"/> 
     </node>
+    -->
 
 
     <!-- ================================== -->

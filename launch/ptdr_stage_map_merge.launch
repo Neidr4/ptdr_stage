@@ -32,7 +32,7 @@
 
     <group ns="$(arg namespace_0)/map_merge">
         <param name="init_pose_x"     value="$(arg namespace_0_x_pos)"/>
-        <param name="init_pose_y"     value="$(arg namespace_0_y_pos)"/>4
+        <param name="init_pose_y"     value="$(arg namespace_0_y_pos)"/>
         <param name="init_pose_z"     value="$(arg namespace_0_z_pos)"/>
         <param name="init_pose_yaw"   value="$(arg namespace_0_yaw)"  />
     </group>
