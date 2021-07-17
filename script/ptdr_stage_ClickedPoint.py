@@ -36,8 +36,8 @@ class ClickedPointPub:
 
     def shutdown_function(self):
         self.new_point.header.stamp = rospy.Time.now()
-        self.new_point.point.x = -1.0
-        self.new_point.point.y = -4.5
+        self.new_point.point.x = 3.0
+        self.new_point.point.y = 4.5
         self.new_point_pub.publish(self.new_point)
     
 if __name__ == '__main__':
