@@ -191,35 +191,20 @@ class movebaseHandler:
             '''
 
 
-    def offset_manager(self, x, y, offset_x, offset_y):
-        x -= offset_x
-        y -= offset_y
-        # if(x < 0):
-        #     x -= offset_x
-        # else:
-        #     x += offset_x
-
-        # if(y < 0):
-        #     y -= offset_y
-        # else:
-        #     y += offset_y
-
-        return x, y
-
-
     def pose_checker(self):
+        #Declaration of local variables
         objective_x_pxl = objective_y_pxl = close_free_cell_x = close_free_cell_y = 0
         objective_x_m = objective_y_pxl = 0.0
         state_of_pxl = 90
-        offset_x = 0.0 #-0.45
-        offset_y = 0.0 #-0.5
+        offset_x = -0.55
+        offset_y = -0.4
 
         #Testing pose
-        self.new_goal.pose.position.x = 1
-        self.new_goal.pose.position.y = -4
-        print("self.new_goal is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
+        self.new_goal.pose.position.x = 1.5
+        self.new_goal.pose.position.y = 3.7
+        print("Test self.new_goal is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
 
-        #making sure no div 0
+        #Making sure no div 0
         if(self.map_merged_item.info.resolution != 0.0):
             #fetching the pixel position of the point
 
@@ -227,67 +212,56 @@ class movebaseHandler:
             conv_m2pxl = 1 / (math.floor(self.map_merged_item.info.resolution * pow(10, 4)) / pow(10, 4))
             conv_pxl2m = (math.floor(self.map_merged_item.info.resolution * pow(10, 4)) / pow(10, 4))
 
+            #Compute center of the map in pxl
             map_merged_center_x_pxl = int(self.map_merged_item.info.width / 2) 
             map_merged_center_y_pxl = int(self.map_merged_item.info.height / 2)
             print("map_merged_center_pxl: [" + str(map_merged_center_x_pxl) + ", " + str(map_merged_center_y_pxl) + "]")
 
-            # map_merged_origin_x_pxl = int(map_merged_center_x_pxl + self.map_merged_item.info.origin.position.x * conv_m2pxl)
-            # map_merged_origin_y_pxl = int(map_merged_center_y_pxl + self.map_merged_item.info.origin.position.y * conv_m2pxl)
-            # print("map_merged_origin_pxl: [" + str(map_merged_origin_x_pxl) + ", " + str(map_merged_origin_y_pxl) + "]")
-            # print("map_merged_origin_m: (" + str(self.map_merged_item.info.origin.position.x) + ", " + str(self.map_merged_item.info.origin.position.y) + ")")
-
+            #Compute the objective pose in the merged map referential
             objective_x_m = float(self.new_goal.pose.position.x + self.map_merged_item.info.origin.position.x)
             objective_y_m = float(self.new_goal.pose.position.y + self.map_merged_item.info.origin.position.y)
             print("objective_m: (" + str(objective_x_m) + ", " + str(objective_y_m) + ")")
 
-            ###########################
-            #Applying offset
-            ###########################
+            #Offset for ajusting
             objective_x_m = float(objective_x_m + offset_x)
             objective_y_m = float(objective_y_m + offset_y)
             print("objective_m after offset: (" + str(objective_x_m) + ", " + str(objective_y_m) + ")")
-            # objective_x_m, objective_y_m = self.offset_manager(objective_x_m, objective_y_m, offset_x, offset_y)
 
-
+            #Converting objective into pxl
             objective_x_pxl = int(objective_x_m * conv_m2pxl) + map_merged_center_x_pxl
             objective_y_pxl = int(objective_y_m * conv_m2pxl) + map_merged_center_y_pxl
             print("objective_pxl: [" + str(objective_x_pxl) + ", " + str(objective_y_pxl) + "]")
             
-            #Transform list into matrix
+            #Transform map list into array
             data_list = self.map_merged_item.data
             reshape_size = (self.map_merged_item.info.height, self.map_merged_item.info.width)
             data_matrix = numpy.reshape(data_list, reshape_size)
 
-            ###########################
-            #testing the of the checked pixel. Writing on map
-            ###########################
-            print('Test the position of received')
+            #Send back the first free cell discovered
             close_free_cell_x_pxl, close_free_cell_y_pxl = self.checker_classic(data_matrix, 10, objective_x_pxl, objective_y_pxl)
+
+            #Convert new goal pose from pixel to meters
             close_free_cell_x_m = close_free_cell_x_pxl * conv_pxl2m + self.map_merged_item.info.origin.position.x
             close_free_cell_y_m = close_free_cell_y_pxl * conv_pxl2m + self.map_merged_item.info.origin.position.y
 
-            ###########################
-            #testing the of the checked pixel. Writing on map
-            ###########################
+            #Test the position of received and display it on robot_n/new_map
             print('Test the position of received')
-            self.goal_pose_writer(data_matrix, 3, close_free_cell_x_pxl, close_free_cell_y_pxl)
+            self.goal_pose_writer(data_matrix, 10, objective_x_pxl, objective_y_pxl)
 
-            #printing results
+            #Printing results
             print("close_free_cell_pxl is: [" + str(close_free_cell_x_pxl) + ", " + str(close_free_cell_y_pxl) + "]")
             print("previous self.new_goal.pose.position is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
             print("previous close_free_cell_m is: (" + str(close_free_cell_x_m) + ", " + str(close_free_cell_y_m) + ")")
 
-            ###########################
-            #testing the position of objective in meter
-            ###########################
+            #Testing by send point
             self.publish_new_point(0, close_free_cell_x_m, close_free_cell_y_m)
             rospy.sleep(1)
             self.publish_new_point(1, close_free_cell_x_m, close_free_cell_y_m)
             rospy.sleep(1)
 
         else:
-            print("map_merged_item.info.resolution is " + str(self.map_merged_item.info.resolution))
-            print("Maybe the map is not published yet?")
+            rospy.loginfo("map_merged_item.info.resolution is " + str(self.map_merged_item.info.resolution))
+            rospy.loginfo("Maybe map_merged is not published yet?")
 
         print("-----------------------------------------------------------")
 
