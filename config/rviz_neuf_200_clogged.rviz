@@ -1421,7 +1421,7 @@ Visualization Manager:
       Value: true
     - Alpha: 1
       Class: rviz/PointStamped
-      Color: 204; 41; 204
+      Color: 255; 0; 0
       Enabled: true
       History Length: 1
       Name: /robot_0/clicked_point
@@ -1431,7 +1431,7 @@ Visualization Manager:
       Value: true
     - Alpha: 1
       Class: rviz/PointStamped
-      Color: 204; 41; 204
+      Color: 0; 255; 0
       Enabled: true
       History Length: 1
       Name: /robot_1/clicked_point
@@ -1441,13 +1441,23 @@ Visualization Manager:
       Value: true
     - Alpha: 1
       Class: rviz/PointStamped
-      Color: 204; 41; 204
+      Color: 0; 0; 255
       Enabled: true
       History Length: 1
       Name: /robot_2/clicked_point
       Radius: 0.200000003
       Topic: /robot_2/clicked_point
       Unreliable: false
+      Value: true
+    - Alpha: 0.699999988
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /robot_0/new_map
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
@@ -1476,16 +1486,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 21.082737
+      Distance: 18.2361832
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.56967199
-        Y: -0.893348038
-        Z: -0.518172264
+        X: 2.65566564
+        Y: 0.455869466
+        Z: -0.516824245
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false

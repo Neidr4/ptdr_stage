@@ -25,27 +25,10 @@ class movebaseHandler:
         self.init_x = init_x
         self.init_y = init_y
 
-        '''
-        node_string = str(robot_ns + "_node")
-        rospy.init_node(node_string)
-
-        print("node_string = " + str(node_string) )
-        '''
-        #Subscribers
-        '''
-        self.sub_chatter = rospy.Subscriber('/chatter', String, self.callback_chatter)
-        self.sub_odomA = rospy.Subscriber('/odomA', Int64, self.callback_odomA)
-        self.sub_odomB = rospy.Subscriber('/odomB', Int64, self.callback_odomB)
-        self.sub_new_goal = rospy.Subscriber('/new_goal', Twist, self.callback_new_goal)
-        '''
-        #self.sub_new_goal = rospy.Subscriber('/new_goal', Int32, self.callback_new_goal)
-
         #Publishers
         self.new_goal = PoseStamped()
         self.new_goal.header.frame_id = "world"
-
         new_goal_string = str("/" + self.robot_ns + "/move_base_simple/goal")
-        #print("new_goal_string = " + str(new_goal_string) )
         self.new_goal_pub = rospy.Publisher(new_goal_string, PoseStamped, queue_size=1)
 
         self.new_point = PointStamped()
@@ -80,6 +63,7 @@ class movebaseHandler:
         #rospy.loginfo("map_merged has been fetched")
         #print(self.map_merged_item.info)
 
+
     def publish_new_point(self, seq, x, y):
         self.new_point.header.seq = seq
         self.new_point.header.stamp = rospy.Time.now()
@@ -89,28 +73,151 @@ class movebaseHandler:
         #print("self.new_point = " + str(self.new_point))
         self.new_point_pub.publish(self.new_point)
 
+
     def publish_new_map(self, seq, data_provided):
         self.new_map.header = self.map_merged_item.header
         self.new_map.header.stamp = rospy.Time.now()
         self.new_map.info = self.map_merged_item.info
         self.new_map.data = data_provided
         self.new_map_pub.publish(self.new_map)
-        '''
-        self.new_map.header.seq = seq
-        self.new_map.header.stamp = rospy.Time.now()
-        #print("rospy.Time.now() = " + str(rospy.Time.now()))
-        self.new_map.header.frame_id = "world"
-        self.new_map.info.resolution = 0.05
-        self.new_map.info.width = self.map_merged_item.info.width
-        self.new_map.info.height = self.map_merged_item.info.height
-        self.new_map.info.origin = self.map_merged_item.info.origin
-        self.new_map.data = data_provided
-        self.new_point_pub.publish(self.new_map)
-        '''
+
+
+    ###########################
+    #Return new map with checkboard at position x, y given
+    ###########################
+    def goal_pose_writer(self, map_to_check, size_of_square, x, y):
+        previous_color = 0
+        data_list_to_publish = [-1] * numpy.size(map_to_check)
+
+        for rings in range (1, size_of_square):
+            for rows in range(rings * 2 + 1):
+                for column in range(rings * 2 + 1):
+                    if (previous_color == 0):
+                        map_to_check[y - rings + column, x - rings + rows] = 90
+                        previous_color = 90
+                    else:
+                        map_to_check[y - rings + column, x - rings + rows] = 0
+                        previous_color = 0
+
+        #Tranforming the map and publishing it
+        data_list_to_publish = numpy.concatenate(map_to_check)
+        self.publish_new_map(0, data_list_to_publish)
+
+
+    ###########################
+    #Simple sqauare check over pixels. Overlaping a lot.
+    ###########################
+    def checker_classic(self, map_to_check, size_of_square, x, y):
+        state_of_pxl = -1
+        return_x = x
+        return_y = y
+
+        #breaks when first discovered pixel is found
+        for rings in range (1, size_of_square + 1):
+            #print("Checker_classic ring: " + str(rings) + ". State_of_pxl is: " + str(state_of_pxl))
+            if(state_of_pxl == 0):
+                break
+
+            for rows in range(rings * 2 + 1):
+                if(state_of_pxl == 0):
+                    break
+
+                for column in range(rings * 2 + 1):
+                    state_of_pxl = map_to_check[y - rings + rows, x - rings + column]
+                    if(state_of_pxl == 0):
+                        return_x = x + column -rings
+                        return_y = y + rows - rings
+                        break
+
+        return return_x, return_y
+
+
+    ###########################
+    #Snail sqauare check over pixels. No overlaping. Not integrated yet.
+    ###########################
+    def checker_snail(self, map_to_check, size_of_square, x, y):
+        print('funtion not integrated')
+        '''            
+        #test up to 11 - 1 = 10 rings
+        for rings in range (1, 51):
+            print("Ring number " + str(rings) + ". State of pxl is " + str(state_of_pxl))
+            if(state_of_pxl == 0):
+                    break
+
+            #line left of the pixel, going down
+            for length in range(rings * 2):
+                state_of_pxl = data_matrix[objective_y_pxl + rings - length, objective_x_pxl - rings]
+                data_matrix[objective_x_pxl - rings, objective_y_pxl + rings - length] = 90
+                if(state_of_pxl == 0):
+                    close_free_cell_x = objective_x_pxl - rings
+                    close_free_cell_y = objective_y_pxl + rings - length
+                    break
+
+            if(state_of_pxl == 0):
+                    break
+
+            #line down of the pixel, going left
+            for length in range(rings * 2):
+                state_of_pxl = data_matrix[objective_x_pxl - rings + length, objective_y_pxl - rings]
+                data_matrix[objective_x_pxl - rings + length, objective_y_pxl - rings] = 90
+                if(state_of_pxl == 0):
+                    close_free_cell_x = objective_x_pxl - rings + length
+                    close_free_cell_y = objective_y_pxl - rings
+                    break
+
+            if(state_of_pxl == 0):
+                    break
+
+            #line right of the pixel, going up
+            for length in range(rings * 2):
+                state_of_pxl = data_matrix[objective_x_pxl + rings, objective_y_pxl - rings + length]
+                data_matrix[objective_x_pxl + rings, objective_y_pxl - rings + length] = 90
+                if(state_of_pxl == 0):
+                    close_free_cell_x = objective_x_pxl + rings
+                    close_free_cell_y = objective_y_pxl - rings + length
+                    break
+
+            if(state_of_pxl == 0):
+                    break
+
+            #line right of the pixel, going left
+            for length in range(rings * 2):
+                state_of_pxl = data_matrix[objective_x_pxl + rings - length - 1, objective_y_pxl + rings]
+                data_matrix[objective_x_pxl + rings - length - 1, objective_y_pxl + rings] = 90
+                if(state_of_pxl == 0):
+                    close_free_cell_x = objective_x_pxl + rings - length
+                    close_free_cell_y = objective_y_pxl + rings
+                    break
+            '''
+
+
+    def offset_manager(self, x, y, offset_x, offset_y):
+        x -= offset_x
+        y -= offset_y
+        # if(x < 0):
+        #     x -= offset_x
+        # else:
+        #     x += offset_x
+
+        # if(y < 0):
+        #     y -= offset_y
+        # else:
+        #     y += offset_y
+
+        return x, y
+
 
     def pose_checker(self):
         objective_x_pxl = objective_y_pxl = close_free_cell_x = close_free_cell_y = 0
+        objective_x_m = objective_y_pxl = 0.0
         state_of_pxl = 90
+        offset_x = 0.0 #-0.45
+        offset_y = 0.0 #-0.5
+
+        #Testing pose
+        self.new_goal.pose.position.x = 1
+        self.new_goal.pose.position.y = -4
+        print("self.new_goal is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
 
         #making sure no div 0
         if(self.map_merged_item.info.resolution != 0.0):
@@ -124,188 +231,63 @@ class movebaseHandler:
             map_merged_center_y_pxl = int(self.map_merged_item.info.height / 2)
             print("map_merged_center_pxl: [" + str(map_merged_center_x_pxl) + ", " + str(map_merged_center_y_pxl) + "]")
 
-            map_merged_origin_x_pxl = int(map_merged_center_x_pxl + self.map_merged_item.info.origin.position.x * conv_m2pxl)
-            map_merged_origin_y_pxl = int(map_merged_center_y_pxl + self.map_merged_item.info.origin.position.y * conv_m2pxl)
-            print("map_merged_origin_pxl: [" + str(map_merged_origin_x_pxl) + ", " + str(map_merged_origin_y_pxl) + "]")
-            print("map_merged_origin_m: [" + str(self.map_merged_item.info.origin.position.x) + ", " + str(self.map_merged_item.info.origin.position.y) + "]")
+            # map_merged_origin_x_pxl = int(map_merged_center_x_pxl + self.map_merged_item.info.origin.position.x * conv_m2pxl)
+            # map_merged_origin_y_pxl = int(map_merged_center_y_pxl + self.map_merged_item.info.origin.position.y * conv_m2pxl)
+            # print("map_merged_origin_pxl: [" + str(map_merged_origin_x_pxl) + ", " + str(map_merged_origin_y_pxl) + "]")
+            # print("map_merged_origin_m: (" + str(self.map_merged_item.info.origin.position.x) + ", " + str(self.map_merged_item.info.origin.position.y) + ")")
 
-            #Testing pose
-            self.new_goal.pose.position.x = 1.0
-            self.new_goal.pose.position.y = 4.0
-            print("self.new_goal is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
-
-            objective_x_m = self.new_goal.pose.position.x + self.map_merged_item.info.origin.position.x
-            objective_y_m = self.new_goal.pose.position.y + self.map_merged_item.info.origin.position.y
+            objective_x_m = float(self.new_goal.pose.position.x + self.map_merged_item.info.origin.position.x)
+            objective_y_m = float(self.new_goal.pose.position.y + self.map_merged_item.info.origin.position.y)
             print("objective_m: (" + str(objective_x_m) + ", " + str(objective_y_m) + ")")
+
+            ###########################
+            #Applying offset
+            ###########################
+            objective_x_m = float(objective_x_m + offset_x)
+            objective_y_m = float(objective_y_m + offset_y)
+            print("objective_m after offset: (" + str(objective_x_m) + ", " + str(objective_y_m) + ")")
+            # objective_x_m, objective_y_m = self.offset_manager(objective_x_m, objective_y_m, offset_x, offset_y)
+
 
             objective_x_pxl = int(objective_x_m * conv_m2pxl) + map_merged_center_x_pxl
             objective_y_pxl = int(objective_y_m * conv_m2pxl) + map_merged_center_y_pxl
             print("objective_pxl: [" + str(objective_x_pxl) + ", " + str(objective_y_pxl) + "]")
-
-            # test_x = objective_x_pxl * conv_pxl2m
-            # test_y = objective_y_pxl * conv_pxl2m
-
-            # self.publish_new_point(0, test_x, test_y)
-            # rospy.sleep(0.5)
-            # self.publish_new_point(1, test_x, test_y)
-            # rospy.sleep(0.5)
             
             #Transform list into matrix
             data_list = self.map_merged_item.data
-            data_matrix = numpy.reshape(data_list, (self.map_merged_item.info.height, self.map_merged_item.info.width))
+            reshape_size = (self.map_merged_item.info.height, self.map_merged_item.info.width)
+            data_matrix = numpy.reshape(data_list, reshape_size)
 
-            data_list_sec = [-1] * len(data_list)
-            data_list_third = [-1] * len(data_list)
+            ###########################
+            #testing the of the checked pixel. Writing on map
+            ###########################
+            print('Test the position of received')
+            close_free_cell_x_pxl, close_free_cell_y_pxl = self.checker_classic(data_matrix, 10, objective_x_pxl, objective_y_pxl)
+            close_free_cell_x_m = close_free_cell_x_pxl * conv_pxl2m + self.map_merged_item.info.origin.position.x
+            close_free_cell_y_m = close_free_cell_y_pxl * conv_pxl2m + self.map_merged_item.info.origin.position.y
 
+            ###########################
+            #testing the of the checked pixel. Writing on map
+            ###########################
+            print('Test the position of received')
+            self.goal_pose_writer(data_matrix, 3, close_free_cell_x_pxl, close_free_cell_y_pxl)
 
-            # for i in range (len(data_list)):
-            #     if(data_list[i] != -1):
-            #         data_list_sec[i] = 90
+            #printing results
+            print("close_free_cell_pxl is: [" + str(close_free_cell_x_pxl) + ", " + str(close_free_cell_y_pxl) + "]")
+            print("previous self.new_goal.pose.position is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
+            print("previous close_free_cell_m is: (" + str(close_free_cell_x_m) + ", " + str(close_free_cell_y_m) + ")")
 
-            print("type(data_matrix)" + str(type(data_matrix)))
-            print("type(data_list_sec)" + str(type(data_list_sec)))
-            print("type(data_list_third)" + str(type(data_list_third)))
-
-            # #Simple test
-            # simple_test_x = 8*20
-            # simple_test_y = 9*20
-            # print("simple test x: " + str(simple_test_x))
-            # print("simple test x: " + str(simple_test_y))
-            # print("data_matrix = " + str(data_matrix[simple_test_x, simple_test_y]))
-            # self.publish_new_point(0, simple_test_x*0.05, simple_test_y*0.05)
-            # #print("data_matrix: " + str(data_matrix))
+            ###########################
+            #testing the position of objective in meter
+            ###########################
+            self.publish_new_point(0, close_free_cell_x_m, close_free_cell_y_m)
+            rospy.sleep(1)
+            self.publish_new_point(1, close_free_cell_x_m, close_free_cell_y_m)
+            rospy.sleep(1)
 
         else:
             print("map_merged_item.info.resolution is " + str(self.map_merged_item.info.resolution))
-            print("maybe the map is not published yet?")
-
-        # self.publish_new_point(0, objective_x_m, objective_y_m)
-        # self.publish_new_point(1, test_x, test_y)
-
-        #checking the type of pxl which is the goal
-        if (data_matrix[objective_y_pxl, objective_x_pxl] == 0):
-            print('value is correct sending the goal')
-
-            #create a dashed square
-            for rings in range (1, 4):
-                for rows in range(rings * 2 + 1):
-                    for column in range(rings * 2 + 1):
-                        state_of_pxl = data_matrix[objective_x_pxl + rows, objective_y_pxl + column]
-                        if (self.previous == 0):
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 90
-                            self.previous = 90
-                        else:
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 0
-                            self.previous = 0
-
-        else:
-            print('value is not correct calculating new goal')
-            print("objective_pxl: [" + str(objective_x_pxl) + ", " + str(objective_y_pxl) + "]")
-            objective_x_pxl -= 10
-            objective_y_pxl -= 1
-            print("objective_pxl: [" + str(objective_x_pxl) + ", " + str(objective_y_pxl) + "]")
-
-
-            for rings in range (1, 4):
-                for rows in range(rings * 2 + 1):
-                    for column in range(rings * 2 + 1):
-                        state_of_pxl = data_matrix[objective_x_pxl + rows, objective_y_pxl + column]
-                        if (self.previous == 0):
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 90
-                            self.previous = 90
-                        else:
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 0
-                            self.previous = 0
-            '''
-            for rings in range (1, 11):
-                # if(state_of_pxl == 1):
-                #     break
-
-                #not sure (rings * 2) or (rings * 2 + 1)
-                for rows in range(rings * 2 + 1):
-                    # if(state_of_pxl == 1):
-                    #     break
-
-                    for column in range(rings * 2 + 1):
-                        state_of_pxl = data_matrix[objective_x_pxl + rows, objective_y_pxl + column]
-                        if (self.previous == 0):
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 90
-                            self.previous = 90
-                        else:
-                            data_matrix[objective_y_pxl + column, objective_x_pxl + rows] = 0
-                            self.previous = 0
-                        # if(state_of_pxl == 1):
-                        #     break
-            
-            #test up to 11 - 1 = 10 rings
-            for rings in range (1, 51):
-                print("Ring number " + str(rings) + ". State of pxl is " + str(state_of_pxl))
-                if(state_of_pxl == 0):
-                        break
-
-                #line left of the pixel, going down
-                for length in range(rings * 2):
-                    state_of_pxl = data_matrix[objective_y_pxl + rings - length, objective_x_pxl - rings]
-                    data_matrix[objective_x_pxl - rings, objective_y_pxl + rings - length] = 90
-                    if(state_of_pxl == 0):
-                        close_free_cell_x = objective_x_pxl - rings
-                        close_free_cell_y = objective_y_pxl + rings - length
-                        break
-
-                if(state_of_pxl == 0):
-                        break
-
-                #line down of the pixel, going left
-                for length in range(rings * 2):
-                    state_of_pxl = data_matrix[objective_x_pxl - rings + length, objective_y_pxl - rings]
-                    data_matrix[objective_x_pxl - rings + length, objective_y_pxl - rings] = 90
-                    if(state_of_pxl == 0):
-                        close_free_cell_x = objective_x_pxl - rings + length
-                        close_free_cell_y = objective_y_pxl - rings
-                        break
-
-                if(state_of_pxl == 0):
-                        break
-
-                #line right of the pixel, going up
-                for length in range(rings * 2):
-                    state_of_pxl = data_matrix[objective_x_pxl + rings, objective_y_pxl - rings + length]
-                    data_matrix[objective_x_pxl + rings, objective_y_pxl - rings + length] = 90
-                    if(state_of_pxl == 0):
-                        close_free_cell_x = objective_x_pxl + rings
-                        close_free_cell_y = objective_y_pxl - rings + length
-                        break
-
-                if(state_of_pxl == 0):
-                        break
-
-                #line right of the pixel, going left
-                for length in range(rings * 2):
-                    state_of_pxl = data_matrix[objective_x_pxl + rings - length - 1, objective_y_pxl + rings]
-                    data_matrix[objective_x_pxl + rings - length - 1, objective_y_pxl + rings] = 90
-                    if(state_of_pxl == 0):
-                        close_free_cell_x = objective_x_pxl + rings - length
-                        close_free_cell_y = objective_y_pxl + rings
-                        break
-            '''
-
-        data_list_sec = numpy.concatenate(data_matrix)
-        self.publish_new_map(0, data_list_sec)
-
-        print("close_free_cell_x pxl is: " + str(close_free_cell_x))
-        print("close_free_cell_y pxl is: " + str(close_free_cell_y))
-
-        print("previous self.new_goal.pose.position.x is: " + str(self.new_goal.pose.position.x))
-        print("previous self.new_goal.pose.position.y is: " + str(self.new_goal.pose.position.y))
-
-        print("new close_free_cell_x * 0.05 is: " + str(close_free_cell_x * 0.05))
-        print("new close_free_cell_y * 0.05 is: " + str(close_free_cell_y * 0.05))
-
-        self.publish_new_point(2, close_free_cell_x * 0.05 - self.map_merged_item.info.origin.position.x, close_free_cell_y * 0.05 - self.map_merged_item.info.origin.position.y)
-        rospy.sleep(0.5)
-
-        #self.new_goal.pose.position.x = close_free_cell_x * 0.05
-        #self.new_goal.pose.position.y = close_free_cell_y * 0.05
+            print("Maybe the map is not published yet?")
 
         print("-----------------------------------------------------------")
 
@@ -350,13 +332,7 @@ class movebaseHandler:
 
 
     def shutdown_function(self):
-        #self.command_int32.data = 0
-        self.new_goal.header.seq = 1
-        self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.x = 4.5
-        self.new_goal.pose.position.y = 4.5
-        self.new_goal.pose.orientation.w = 1
-        #self.new_goal_pub.publish(self.new_goal)
+        rospy.loginfo(str(self.robot_ns) + " shuting down ---------------")
     
 
 if __name__ == '__main__':
@@ -393,19 +369,19 @@ if __name__ == '__main__':
         #movebaseHandler0.publish_new_goal_param(movebaseHandler0.last_received_pose.pose.position.y, movebaseHandler0.last_received_pose.pose.position.x)
         rospy.sleep(pause)
 
-        rospy.loginfo("instruction robot_0")
-        print("movebaseHandler1.last_received_pose.pose.position.x: " +str(movebaseHandler1.last_received_pose.pose.position.y))
-        print("movebaseHandler1.last_received_pose.pose.position.y: " +str(movebaseHandler1.last_received_pose.pose.position.x))
-        movebaseHandler1.pose_checker()
-        #movebaseHandler1.publish_new_goal_param(movebaseHandler1.last_received_pose.pose.position.y, movebaseHandler1.last_received_pose.pose.position.x)
-        rospy.sleep(pause)
+        # rospy.loginfo("instruction robot_1")
+        # print("movebaseHandler1.last_received_pose.pose.position.x: " +str(movebaseHandler1.last_received_pose.pose.position.y))
+        # print("movebaseHandler1.last_received_pose.pose.position.y: " +str(movebaseHandler1.last_received_pose.pose.position.x))
+        # movebaseHandler1.pose_checker()
+        # #movebaseHandler1.publish_new_goal_param(movebaseHandler1.last_received_pose.pose.position.y, movebaseHandler1.last_received_pose.pose.position.x)
+        # rospy.sleep(pause)
 
-        rospy.loginfo("instruction robot_0")
-        print("movebaseHandler2.last_received_pose.pose.position.x: " +str(movebaseHandler2.last_received_pose.pose.position.y))
-        print("movebaseHandler2.last_received_pose.pose.position.y: " +str(movebaseHandler2.last_received_pose.pose.position.x))
-        movebaseHandler2.pose_checker()
-        #movebaseHandler2.publish_new_goal_param(movebaseHandler2.last_received_pose.pose.position.y, movebaseHandler2.last_received_pose.pose.position.x)
-        rospy.sleep(pause)
+        # rospy.loginfo("instruction robot_2")
+        # print("movebaseHandler2.last_received_pose.pose.position.x: " +str(movebaseHandler2.last_received_pose.pose.position.y))
+        # print("movebaseHandler2.last_received_pose.pose.position.y: " +str(movebaseHandler2.last_received_pose.pose.position.x))
+        # movebaseHandler2.pose_checker()
+        # #movebaseHandler2.publish_new_goal_param(movebaseHandler2.last_received_pose.pose.position.y, movebaseHandler2.last_received_pose.pose.position.x)
+        # rospy.sleep(pause)
 
     try:
         rospy.spin()
