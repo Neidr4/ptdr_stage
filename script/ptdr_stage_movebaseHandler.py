@@ -25,6 +25,8 @@ class movebaseHandler:
         self.init_x = init_x
         self.init_y = init_y
 
+        self.last_run = 0.0
+
         #Publishers
         self.new_goal = PoseStamped()
         self.new_goal.header.frame_id = "world"
@@ -41,6 +43,11 @@ class movebaseHandler:
         new_map_string = str("/" + self.robot_ns + "/new_map")
         self.new_map_pub = rospy.Publisher(new_map_string, OccupancyGrid, queue_size=1)
 
+        self.merged_fuse = OccupancyGrid()
+        self.merged_fuse.header.frame_id = "world"
+        merged_fuse_string = str("/" + self.robot_ns + "/map")
+        self.merged_fuse_pub = rospy.Publisher(merged_fuse_string, OccupancyGrid, queue_size=1)
+
         #Subscribers
         self.last_received_pose = PoseStamped()
         buffer_string = str("/" + self.robot_ns + "/move_base_simple/buffer")
@@ -48,18 +55,28 @@ class movebaseHandler:
 
         self.map_merged_item = OccupancyGrid()
         self.sub_map_merged_item = rospy.Subscriber("map_merged", OccupancyGrid, self.callback_map_merged_item)
+        self.merged_map_init_width = 0
+        self.merged_map_init_height = 0
 
         self.previous = 0
 
 
     def callback_movebaseHandler(self, msg):
         self.last_received_pose = msg
-        #print("self.last_received_pose.pose.position.x: " + str(self.last_received_pose.pose.position.x) )
-        #print("self.last_received_pose.pose.position.y: " + str(self.last_received_pose.pose.position.y) )
+        self.new_goal.pose.position.x = self.last_received_pose.pose.position.x
+        self.new_goal.pose.position.y = self.last_received_pose.pose.position.y
+        # print("self.last_received_pose.pose.position.x: " + str(self.last_received_pose.pose.position.x) )
+        # print("self.last_received_pose.pose.position.y: " + str(self.last_received_pose.pose.position.y) )
 
 
     def callback_map_merged_item(self, msg):
         self.map_merged_item = msg
+        #if((self.map_merged_item.info.resolution != 0.0) and (self.merged_map_init_width == 0)):
+        # if(self.merged_map_init_width == 0):
+        #     self.merged_map_init_width = msg.info.width
+        #     self.merged_map_init_width = msg.info.height
+
+
         #rospy.loginfo("map_merged has been fetched")
         #print(self.map_merged_item.info)
 
@@ -80,6 +97,53 @@ class movebaseHandler:
         self.new_map.info = self.map_merged_item.info
         self.new_map.data = data_provided
         self.new_map_pub.publish(self.new_map)
+
+
+    def publish_merged_fuse(self, seq):
+        self.merged_fuse.header = self.map_merged_item.header
+        self.merged_fuse.header.stamp = rospy.Time.now()
+        self.merged_fuse.info = self.map_merged_item.info
+        self.merged_fuse.data = self.map_merged_item.data
+        self.merged_fuse_pub.publish(self.merged_fuse)
+
+
+    def publish_new_goal_param(self, x, y):
+        self.new_goal.header.seq = 1
+        self.new_goal.header.stamp = rospy.Time.now()
+        self.new_goal.pose.position.x = x
+        self.new_goal.pose.position.y = y
+        self.new_goal.pose.orientation.w = 1
+        self.new_goal_pub.publish(self.new_goal)
+
+
+    def publish_new_goal_stop(self):
+        self.new_goal.header.seq = 1
+        self.new_goal.header.stamp = rospy.Time.now()
+        self.new_goal.pose.position.y = 4.5
+        self.new_goal.pose.position.x = 4.5
+        self.new_goal.pose.orientation.w = 1
+
+        self.new_goal_pub.publish(self.new_goal)
+
+
+    def publish_new_goal(self):
+        self.new_goal.header.seq = 1
+        self.new_goal.header.stamp = rospy.Time.now()
+        self.new_goal.pose.position.x = 4.5
+        self.new_goal.pose.position.y = 4.5
+        self.new_goal.pose.orientation.w = 1
+
+        if( (self.last_received_pose.pose.position.x == 0.0) and (self.last_received_pose.pose.position.y == 0.0)):
+            rospy.loginfo('No goal published yet for ' + str(self.robot_ns))
+        else:
+            self.new_goal.pose.position.x = self.last_received_pose.pose.position.x + self.init_x
+            self.new_goal.pose.position.y = self.last_received_pose.pose.position.y + self.init_y
+            rospy.loginfo('Goal for '  + str(self.robot_ns) + ' has been published to ' + str(self.last_received_pose.pose.position.x) + ', ' + str(self.last_received_pose.pose.position.y) + ' with offset')
+            self.new_goal_pub.publish(self.new_goal)
+
+        self.new_goal_pub.publish(self.new_goal)
+        rospy.sleep(2)
+        self.new_goal_pub.publish(self.new_goal)
 
 
     ###########################
@@ -104,6 +168,57 @@ class movebaseHandler:
         self.publish_new_map(0, data_list_to_publish)
 
 
+    def anti_wall_system(self, map_to_check, distance, x, y):
+        state_of_pxl = 0
+        return_x = x
+        return_y = y
+
+        # If a wall is encounter in a direction,
+        # it will try to go as far as possible on the opposite direction.
+
+        for top in range(1, distance + 1):
+            state_of_pxl = map_to_check[y + top, x]
+            if(state_of_pxl > 0):
+                for offset in range(1, distance + 1):
+                    state_of_pxl = map_to_check[y - offset, x]
+                    if(state_of_pxl == 0):
+                        return_x = x
+                        return_y = y - offset
+                return return_x, return_y
+
+        for right in range(1, distance + 1):
+            state_of_pxl = map_to_check[y, x + right]
+            if(state_of_pxl > 0):
+                for offset in range(1, distance + 1):
+                    state_of_pxl = map_to_check[y, x - offset]
+                    if(state_of_pxl == 0):
+                        return_x = x - offset
+                        return_y = y
+                return return_x, return_y
+
+        for bot in range(1, distance + 1):
+            state_of_pxl = map_to_check[y - bot, x]
+            if(state_of_pxl > 0):
+                for offset in range(1, distance + 1):
+                    state_of_pxl = map_to_check[y + offset, x]
+                    if(state_of_pxl == 0):
+                        return_x = x
+                        return_y = y + offset
+                return return_x, return_y
+
+        for left in range(1, distance + 1):
+            state_of_pxl = map_to_check[y, x - left]
+            if(state_of_pxl > 0):
+                for offset in range(1, distance + 1):
+                    state_of_pxl = map_to_check[y, x + offset]
+                    if(state_of_pxl == 0):
+                        return_x = x + offset
+                        return_y = y
+                return return_x, return_y
+
+        return return_x, return_y
+
+
     ###########################
     #Simple sqauare check over pixels. Overlaping a lot.
     ###########################
@@ -125,8 +240,9 @@ class movebaseHandler:
                 for column in range(rings * 2 + 1):
                     state_of_pxl = map_to_check[y - rings + rows, x - rings + column]
                     if(state_of_pxl == 0):
-                        return_x = x + column -rings
-                        return_y = y + rows - rings
+                        return_x, return_y = self.anti_wall_system(map_to_check, 3, x - rings + column, y - rings + rows)
+                        # return_x = x + column -rings
+                        # return_y = y + rows - rings
                         break
 
         return return_x, return_y
@@ -198,11 +314,18 @@ class movebaseHandler:
         state_of_pxl = 90
         offset_x = -0.55
         offset_y = -0.4
+        pose_checker_x = self.new_goal.pose.position.x
+        pose_checker_y = self.new_goal.pose.position.y
+
+        #Send to init value instead. Avoid unnecessary travel
+        if((pose_checker_x == 0.0) and (pose_checker_y == 0.0)):
+            pose_checker_x = self.init_x + 0.2
+            pose_checker_y = self.init_y
 
         #Testing pose
-        self.new_goal.pose.position.x = 1.5
-        self.new_goal.pose.position.y = 3.7
-        print("Test self.new_goal is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
+        # pose_checker_x = 1.5
+        # pose_checker_y = 3.7
+        # rospy.loginfo("Test occuring, self.new_goal is: (" + str(pose_checker_x) + ", " + str(pose_checker_y) + ")")
 
         #Making sure no div 0
         if(self.map_merged_item.info.resolution != 0.0):
@@ -218,9 +341,16 @@ class movebaseHandler:
             print("map_merged_center_pxl: [" + str(map_merged_center_x_pxl) + ", " + str(map_merged_center_y_pxl) + "]")
 
             #Compute the objective pose in the merged map referential
-            objective_x_m = float(self.new_goal.pose.position.x + self.map_merged_item.info.origin.position.x)
-            objective_y_m = float(self.new_goal.pose.position.y + self.map_merged_item.info.origin.position.y)
+            objective_x_m = float(pose_checker_x + self.map_merged_item.info.origin.position.x)
+            objective_y_m = float(pose_checker_y + self.map_merged_item.info.origin.position.y)
             print("objective_m: (" + str(objective_x_m) + ", " + str(objective_y_m) + ")")
+
+            #Correcting shift
+            if(objective_x_m > 10):
+                objective_x_m -= 30
+
+            if(objective_y_m > 10):
+                objective_y_m -= 30
 
             #Offset for ajusting
             objective_x_m = float(objective_x_m + offset_x)
@@ -245,19 +375,22 @@ class movebaseHandler:
             close_free_cell_y_m = close_free_cell_y_pxl * conv_pxl2m + self.map_merged_item.info.origin.position.y
 
             #Test the position of received and display it on robot_n/new_map
-            print('Test the position of received')
             self.goal_pose_writer(data_matrix, 10, objective_x_pxl, objective_y_pxl)
+            print('Test the position of received')
 
             #Printing results
             print("close_free_cell_pxl is: [" + str(close_free_cell_x_pxl) + ", " + str(close_free_cell_y_pxl) + "]")
             print("previous self.new_goal.pose.position is: (" + str(self.new_goal.pose.position.x) + ", " + str(self.new_goal.pose.position.y) + ")")
             print("previous close_free_cell_m is: (" + str(close_free_cell_x_m) + ", " + str(close_free_cell_y_m) + ")")
 
-            #Testing by send point
+            #Displaying by send point
             self.publish_new_point(0, close_free_cell_x_m, close_free_cell_y_m)
             rospy.sleep(1)
             self.publish_new_point(1, close_free_cell_x_m, close_free_cell_y_m)
             rospy.sleep(1)
+
+            pose_checker_x = close_free_cell_x_m
+            pose_checker_y = close_free_cell_y_m
 
         else:
             rospy.loginfo("map_merged_item.info.resolution is " + str(self.map_merged_item.info.resolution))
@@ -265,44 +398,7 @@ class movebaseHandler:
 
         print("-----------------------------------------------------------")
 
-
-    def publish_new_goal_param(self, x, y):
-        self.new_goal.header.seq = 1
-        self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.x = x
-        self.new_goal.pose.position.y = y
-        self.new_goal.pose.orientation.w = 1
-        self.new_goal_pub.publish(self.new_goal)
-
-
-    def publish_new_goal_stop(self):
-        self.new_goal.header.seq = 1
-        self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.y = 4.5
-        self.new_goal.pose.position.x = 4.5
-        self.new_goal.pose.orientation.w = 1
-
-        self.new_goal_pub.publish(self.new_goal)
-
-
-    def publish_new_goal(self):
-        self.new_goal.header.seq = 1
-        self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.x = 4.5
-        self.new_goal.pose.position.y = 4.5
-        self.new_goal.pose.orientation.w = 1
-
-        if( (self.last_received_pose.pose.position.x == 0.0) and (self.last_received_pose.pose.position.y == 0.0)):
-            rospy.loginfo('No goal published yet for ' + str(self.robot_ns))
-        else:
-            self.new_goal.pose.position.x = self.last_received_pose.pose.position.x + self.init_x
-            self.new_goal.pose.position.y = self.last_received_pose.pose.position.y + self.init_y
-            rospy.loginfo('Goal for '  + str(self.robot_ns) + ' has been published to ' + str(self.last_received_pose.pose.position.x) + ', ' + str(self.last_received_pose.pose.position.y) + ' with offset')
-            self.new_goal_pub.publish(self.new_goal)
-
-        self.new_goal_pub.publish(self.new_goal)
-        rospy.sleep(2)
-        self.new_goal_pub.publish(self.new_goal)
+        return pose_checker_x, pose_checker_y
 
 
     def shutdown_function(self):
@@ -312,7 +408,8 @@ class movebaseHandler:
 if __name__ == '__main__':
     rospy.init_node('movebaseHandler_node')
     #rate = rospy.Rate(10)
-    #start_time = rospy.get_rostime()
+    now = rospy.get_time()
+    previous_map_update = 0.0
 
     rospy.loginfo("initilisation movebaseHandler_node")
 
@@ -324,11 +421,6 @@ if __name__ == '__main__':
     rospy.on_shutdown(movebaseHandler1.shutdown_function)
     rospy.on_shutdown(movebaseHandler2.shutdown_function)
 
-
-    #map_merged_metadata = MapMetaData()
-
-    #sub_map_merged_meta = rospy.Subscriber("map_merged_updates", MapMetaData, callback_map_merged_meta)
-
     rospy.sleep(5)
 
     pause = 10
@@ -336,26 +428,40 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         rospy.loginfo("loop")
 
-        rospy.loginfo("instruction robot_0")
-        print("movebaseHandler0.last_received_pose.pose.position.x: " +str(movebaseHandler0.last_received_pose.pose.position.y))
-        print("movebaseHandler0.last_received_pose.pose.position.y: " +str(movebaseHandler0.last_received_pose.pose.position.x))
-        movebaseHandler0.pose_checker()
-        #movebaseHandler0.publish_new_goal_param(movebaseHandler0.last_received_pose.pose.position.y, movebaseHandler0.last_received_pose.pose.position.x)
-        rospy.sleep(pause)
+        now = rospy.get_time()
+        if((now - movebaseHandler0.last_run) > 15):
+            rospy.loginfo("instruction robot_0")
+            # print("movebaseHandler0.last_received_pose.pose.position.x: " +str(movebaseHandler0.last_received_pose.pose.position.y))
+            # print("movebaseHandler0.last_received_pose.pose.position.y: " +str(movebaseHandler0.last_received_pose.pose.position.x))
+            pose_checker_x0, pose_checker_y0 = movebaseHandler0.pose_checker()
+            movebaseHandler0.publish_new_goal_param(pose_checker_x0, pose_checker_y0)
+            # rospy.sleep(pause)
 
-        # rospy.loginfo("instruction robot_1")
-        # print("movebaseHandler1.last_received_pose.pose.position.x: " +str(movebaseHandler1.last_received_pose.pose.position.y))
-        # print("movebaseHandler1.last_received_pose.pose.position.y: " +str(movebaseHandler1.last_received_pose.pose.position.x))
-        # movebaseHandler1.pose_checker()
-        # #movebaseHandler1.publish_new_goal_param(movebaseHandler1.last_received_pose.pose.position.y, movebaseHandler1.last_received_pose.pose.position.x)
-        # rospy.sleep(pause)
+        now = rospy.get_time()
+        if((now - movebaseHandler1.last_run) > 15):
+            rospy.loginfo("instruction robot_1")
+            # print("movebaseHandler1.last_received_pose.pose.position.x: " +str(movebaseHandler1.last_received_pose.pose.position.y))
+            # print("movebaseHandler1.last_received_pose.pose.position.y: " +str(movebaseHandler1.last_received_pose.pose.position.x))
+            pose_checker_x1, pose_checker_y1 = movebaseHandler1.pose_checker()
+            movebaseHandler1.publish_new_goal_param(pose_checker_x1, pose_checker_y1)
+            #  rospy.sleep(pause)
 
-        # rospy.loginfo("instruction robot_2")
-        # print("movebaseHandler2.last_received_pose.pose.position.x: " +str(movebaseHandler2.last_received_pose.pose.position.y))
-        # print("movebaseHandler2.last_received_pose.pose.position.y: " +str(movebaseHandler2.last_received_pose.pose.position.x))
-        # movebaseHandler2.pose_checker()
-        # #movebaseHandler2.publish_new_goal_param(movebaseHandler2.last_received_pose.pose.position.y, movebaseHandler2.last_received_pose.pose.position.x)
-        # rospy.sleep(pause)
+        now = rospy.get_time()
+        if((now - movebaseHandler2.last_run) > 15):
+            rospy.loginfo("instruction robot_2")
+            # print("movebaseHandler2.last_received_pose.pose.position.x: " +str(movebaseHandler2.last_received_pose.pose.position.y))
+            # print("movebaseHandler2.last_received_pose.pose.position.y: " +str(movebaseHandler2.last_received_pose.pose.position.x))
+            pose_checker_x2, pose_checker_y2 = movebaseHandler2.pose_checker()
+            movebaseHandler2.publish_new_goal_param(pose_checker_x2, pose_checker_y2)
+            # rospy.sleep(pause)
+
+        now = rospy.get_time()
+        if((now - previous_map_update) > 15):
+            movebaseHandler0.publish_merged_fuse(0)
+            movebaseHandler1.publish_merged_fuse(0)
+            movebaseHandler2.publish_merged_fuse(0)
+            previous_map_update = now
+
 
     try:
         rospy.spin()
