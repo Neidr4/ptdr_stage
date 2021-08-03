@@ -55,8 +55,8 @@ class Robot:
     def publish_new_goal_stop(self):
         self.new_goal.header.seq = 1
         self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.y = -4.5
-        self.new_goal.pose.position.x = -4.5
+        self.new_goal.pose.position.y = 1.5
+        self.new_goal.pose.position.x = 4.5
         self.new_goal.pose.orientation.w = 1
 
         self.new_goal_pub.publish(self.new_goal)
@@ -65,8 +65,8 @@ class Robot:
         self.new_goal.header.seq = 1
         self.new_goal.header.stamp = rospy.Time.now()
         print("rospy.Time.now() = " + str(rospy.Time.now()))
-        self.new_goal.pose.position.x = -1.0
-        self.new_goal.pose.position.y = -4.5
+        self.new_goal.pose.position.x = 3.0
+        self.new_goal.pose.position.y = 4.5
         self.new_goal.pose.orientation.w = 1
         print("self.new_goal = " + str(self.new_goal))
         self.new_goal_pub.publish(self.new_goal)
@@ -75,8 +75,8 @@ class Robot:
         #self.command_int32.data = 0
         self.new_goal.header.seq = 1
         self.new_goal.header.stamp = rospy.Time.now()
-        self.new_goal.pose.position.x = -4.5
-        self.new_goal.pose.position.y = -4.5
+        self.new_goal.pose.position.x = 1.5
+        self.new_goal.pose.position.y = 4.5
         self.new_goal.pose.orientation.w = 1
         self.new_goal_pub.publish(self.new_goal)
     
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     
     while not rospy.is_shutdown():
 
-        robot2.publish_new_goal()
+        robot0.publish_new_goal()
         rospy.sleep(5)
         '''
         robot2.publish_new_goal_stop()
