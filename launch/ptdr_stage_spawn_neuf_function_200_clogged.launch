@@ -11,7 +11,7 @@
   <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
   <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
 
-  <arg name="map_file"          default="$(find ptdr_stage)/maps/maze2.yaml"/>
+  <arg name="map_file"          default="$(find ptdr_stage)/maps/maze_neuf_200_clogged.yaml"/>
   <arg name="map_file_empty"    default="$(find ptdr_stage)/maps/map_empty_05_res.yaml"/>
 
 
@@ -29,11 +29,11 @@
 
     <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="0 0 0 0 0 0 /world $(arg robot_namespace)/map 100"/>
 
-    <node name="map_server_$(arg robot_namespace)" pkg="map_server" type="map_server" args="$(arg map_file_empty)">
+    <node name="map_server_$(arg robot_namespace)" pkg="map_server" type="map_server" args="$(arg map_file)">
       <param name="frame_id" value="map"/>
     </node>
   
-
+<!-- 
     <arg name="scan_topic"  value="base_scan" />
     <arg name="base_frame"  value="$(arg robot_namespace)/base_footprint"/>
     <arg name="odom_frame"  value="odom"/>
@@ -59,7 +59,7 @@
 
       <param name="ogain" value="10.0"/>
 
-<!--       
+      
       <param name="map_update_interval" value="0.5"/>
       
       <param name="sigma" value="0.05"/>
@@ -87,7 +87,7 @@
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>
       <param name="lasamplestep" value="0.005"/>
-      -->
+     
 
       <remap from="scan" to="base_scan"/>
     </node>
@@ -98,7 +98,7 @@
         <param name="init_pose_z"     value="$(arg init_z_pos)"/>
         <param name="init_pose_yaw"   value="$(arg init_yaw)"  />
     </group>
-
+ -->
     <!-- ================================== -->
     <!-- =========== Robot bring ========== -->
     <!-- ================================== -->
