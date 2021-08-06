@@ -15,10 +15,9 @@ define hokuyo ranger
 (
   sensor
   (
-    range_min 0.0
-    range_max 2.0
-    fov 270.25
-    samples 1081
+    range [ 0 12 ]
+    fov 360.0
+    samples 1000
   )
 
   color "black"

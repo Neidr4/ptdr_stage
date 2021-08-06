@@ -7,6 +7,21 @@
     <arg name="namespace_1" default="robot_1"/>
     <arg name="namespace_2" default="robot_2"/>
 
+    <arg name="namespace_0_x_pos" value="1.5"/>
+    <arg name="namespace_0_y_pos" value="4.5"/>
+    <arg name="namespace_0_z_pos" value="0.0"/>
+    <arg name="namespace_0_yaw"   value="0.0"/>
+
+    <arg name="namespace_1_x_pos" value="3.0"/>
+    <arg name="namespace_1_y_pos" value="4.0"/>
+    <arg name="namespace_1_z_pos" value="0.0"/>
+    <arg name="namespace_1_yaw"   value="0.0"/>
+
+    <arg name="namespace_2_x_pos" value="4.5"/>
+    <arg name="namespace_2_y_pos" value="4.5"/>
+    <arg name="namespace_2_z_pos" value="0.0"/>
+    <arg name="namespace_2_yaw"   value="0.0"/>
+<!-- 
     <arg name="namespace_0_x_pos" value="-3.0"/>
     <arg name="namespace_0_y_pos" value="-9.0"/>
     <arg name="namespace_0_z_pos" value="0.0"/>
@@ -21,7 +36,7 @@
     <arg name="namespace_2_y_pos" value="-9.0"/>
     <arg name="namespace_2_z_pos" value="0.0"/>
     <arg name="namespace_2_yaw"   value="0.0"/>
-
+ -->
     <!--
 
         <arg name="namespace_0_x_pos" value="-30.0"/>

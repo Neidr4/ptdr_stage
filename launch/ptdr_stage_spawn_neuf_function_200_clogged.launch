@@ -24,8 +24,8 @@
     <!-- ================================== -->
     <!-- =============== Map ============== -->
     <!-- ================================== -->
-
-    <!-- node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="$(arg init_x_pos) $(arg init_y_pos) 0 $(arg init_yaw) 0 0 /world $(arg robot_namespace)/map 100"/ -->
+<!-- 
+    <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="-$(arg init_x_pos) -$(arg init_y_pos) 0 $(arg init_yaw) 0 0 /world $(arg robot_namespace)/map 100"/> -->
 
     <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="0 0 0 0 0 0 /world $(arg robot_namespace)/map 100"/>
 
@@ -37,7 +37,7 @@
     <arg name="scan_topic"  value="base_scan" />
     <arg name="base_frame"  value="$(arg robot_namespace)/base_footprint"/>
     <arg name="odom_frame"  value="odom"/>
-    <arg name="map_frame"  value="/map_merged"/>
+    <arg name="map_frame"  value="map"/>
 
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
 
@@ -45,21 +45,30 @@
       <param name="odom_frame" value="$(arg odom_frame)"/>
       <param name="map_frame" value="$(arg map_frame)"/>
 
-      <param name="xmin" value="-5.0"/>
-      <param name="ymin" value="-5.0"/>
-      <param name="xmax" value="5.0"/>
-      <param name="ymax" value="5.0"/>
+      <param name="xmin" value="-20.0"/>
+      <param name="ymin" value="-20.0"/>
+      <param name="xmax" value="20.0"/>
+      <param name="ymax" value="20.0"/>
+
+      <param name="maxUrange" value="11.0"/>
+      <param name="maxRange" value="13.0"/>
+
+      <param name="minimumScore" value="0.05"/>
+
+      <param name="particles" value="100"/>
+
+      <param name="ogain" value="10.0"/>
+
 <!--       
       <param name="map_update_interval" value="0.5"/>
-      <param name="maxUrange" value="5.0"/>
-      <param name="maxRange" value="11.0"/>
+      
       <param name="sigma" value="0.05"/>
       <param name="kernelSize" value="1"/>
       <param name="lstep" value="0.05"/>
       <param name="astep" value="0.05"/>
       <param name="iterations" value="5"/>
       <param name="lsigma" value="0.075"/>
-      <param name="ogain" value="3.0"/>
+      
       <param name="lskip" value="10"/>
       <param name="minimumScore" value="90.0"/>
       <param name="srr" value="0.01"/>
@@ -70,7 +79,7 @@
       <param name="angularUpdate" value="0.436"/>
       <param name="temporalUpdate" value="1"/>
       <param name="resampleThreshold" value="0.5"/>
-      <param name="particles" value="100"/>
+      
        
 
       <param name="delta" value="0.05"/>
@@ -138,7 +147,7 @@
       <param name="use_map_topic"             value="true"/>
       <!-- Publish scans from best pose at a max of 10 Hz -->
       <param name="odom_model_type"           value="diff"/>
-      <param name="odom_frame_id"             value="$(arg robot_namespace)/odom"/> 
+      <param name="odom_frame_id"             value="/$(arg robot_namespace)/odom"/> 
       <param name="base_frame_id"             value="$(arg robot_namespace)/base_footprint"/> 
       <param name="global_frame_id"           value="/map_merged"/>
       <param name="resample_interval"         value="1"/>
@@ -147,11 +156,11 @@
       <remap from="static_map"                to="/static_map" />
       <remap from="map"                       to="/map" />
     </node>
-
+<!-- 
     <node name="robot_pose_publisher_$(arg robot_namespace)" pkg="robot_pose_publisher" type="robot_pose_publisher" output="screen">      
       <param name="base_frame"             value="$(arg robot_namespace)/base_footprint"/> 
     </node>
-
+ -->
 
   </group>
 
