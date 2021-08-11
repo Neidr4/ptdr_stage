@@ -5,6 +5,9 @@ import tf
 import math
 import numpy
 
+# from std_msgs.msg import Empty
+from std_srvs.srv import Empty, EmptyResponse
+from std_msgs.msg import Empty as EmptyMsg
 from nav_msgs.msg import Odometry, OccupancyGrid, MapMetaData
 from geometry_msgs.msg import Quaternion, TransformStamped, Twist, PoseStamped, PointStamped, PoseWithCovarianceStamped
 
@@ -12,7 +15,7 @@ robot0_ns = "robot_0"
 robot1_ns = "robot_1"
 robot2_ns = "robot_2"
 
-array_point_patrol = [ (-4.5, 4.5), (-4.5, -4.5), (4.5, -4.5), (-3.5, -1.5), (4.0, 1.0), (-2.0, 3.0)]
+array_point_patrol = [ (-4.5, 4.5), (-4.5, -4.5), (4.5, -4.5), (-3.5, -2.0), (4.0, 1.0), (-2.0, 3.0)]
 
 
 class Patrolling:
@@ -44,6 +47,11 @@ class Patrolling:
         amcl_pose_string = str("/" + self.robot_ns + "/amcl_pose")
         self.amcl_pose_sub = rospy.Subscriber( amcl_pose_string, PoseWithCovarianceStamped, self.callback_amcl_pose)
 
+        #Services
+        self.clearing_costmap_string = str("/" + self.robot_ns + "/move_base_node/clear_costmaps")
+        self.cleared_costmap_ack = rospy.ServiceProxy(self.clearing_costmap_string, Empty)
+
+
 
     def callback_amcl_pose(self, msg):
         #print("inside callback_amcl_pose")
@@ -67,6 +75,7 @@ class Patrolling:
         self.new_goal.pose.position.y = y
         self.new_goal.pose.orientation.w = 1
         self.new_goal_pub.publish(self.new_goal)
+        rospy.sleep(0.5)
 
 
     def publish_new_goal_stop(self):
@@ -89,15 +98,15 @@ class Patrolling:
         objective_x = abs(self.new_goal.pose.position.x)
         objective_y = abs(self.new_goal.pose.position.y)
 
-        print("check_proximity x and y = " + str(abs_x) + ", " + str(abs_y))
-        print("x - tolerance: " + str(abs_x - tolerance))
-        print((objective_x - tolerance <= abs_x))
-        print("x + tolerance: " + str(abs_x + tolerance))
-        print((objective_x + tolerance >= abs_x))
-        print("y - tolerance: " + str(abs_y - tolerance))
-        print((objective_y - tolerance <= abs_y))
-        print("y + tolerance: " + str(abs_y + tolerance))
-        print((objective_y + tolerance >= abs_y))
+        # print("check_proximity x and y = " + str(abs_x) + ", " + str(abs_y))
+        # print("x - tolerance: " + str(abs_x - tolerance))
+        # print((objective_x - tolerance <= abs_x))
+        # print("x + tolerance: " + str(abs_x + tolerance))
+        # print((objective_x + tolerance >= abs_x))
+        # print("y - tolerance: " + str(abs_y - tolerance))
+        # print((objective_y - tolerance <= abs_y))
+        # print("y + tolerance: " + str(abs_y + tolerance))
+        # print((objective_y + tolerance >= abs_y))
 
         if( (objective_x - tolerance <= abs_x) and 
             (objective_x + tolerance >= abs_x) and 
@@ -110,18 +119,26 @@ class Patrolling:
             return False
 
 
+    def pop_init(self):
+        if free_goals.count((self.init_x, self.init_y)) > 0:
+            free_goals.pop((self.init_x, self.init_y))
+
+
     def assign_goal(self):
         print("inside assign_goal")
 
         close_enough = False
 
         if(self.check_proximity() == True):
-            array_point_patrol.append((self.new_goal.pose.position.x, self.new_goal.pose.position.y))
+            free_goals.append((self.new_goal.pose.position.x, self.new_goal.pose.position.y))
             close_enough = True
             print("Goal has been reach")
             print("Adding value ")
 
+        #self.pop_init()
+
         if ( (len(free_goals) > 0) and (close_enough == True) ):
+            self.cleared_costmap_ack()
             self.publish_new_goal_param(free_goals[0][0], free_goals[0][1])
             print("Goal (" + str(free_goals[0][0]) + ", " + str(free_goals[0][1]) + ") has been assigned")
             print("Poping value new free_goals are " + str(free_goals))
