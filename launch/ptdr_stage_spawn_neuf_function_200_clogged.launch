@@ -11,7 +11,7 @@
   <arg name="stacks"     default="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons -->
   <arg name="3d_sensor"  default="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
 
-  <arg name="map_file"          default="$(find ptdr_stage)/maps/maze_neuf_05_res.yaml"/>
+  <arg name="map_file"          default="$(find ptdr_stage)/maps/manual_record_200.yaml"/>
   <arg name="map_file_empty"    default="$(find ptdr_stage)/maps/map_empty_05_res.yaml"/>
 
 
