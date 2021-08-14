@@ -47,6 +47,12 @@ class Patrolling:
         amcl_pose_string = str("/" + self.robot_ns + "/amcl_pose")
         self.amcl_pose_sub = rospy.Subscriber( amcl_pose_string, PoseWithCovarianceStamped, self.callback_amcl_pose)
 
+        self.new_point_pub = PointStamped()
+        new_point_string = str("/clicked_point")
+        self.new_point.header.frame_id = "world"
+        print("new_point_string = " + str(new_point_string) )
+        self.new_point_pub = rospy.Subscriber(new_point_string, PointStamped, self.callback_clicked_point)
+
         #Services
         self.clearing_costmap_string = str("/" + self.robot_ns + "/move_base_node/clear_costmaps")
         self.cleared_costmap_ack = rospy.ServiceProxy(self.clearing_costmap_string, Empty)
@@ -56,6 +62,17 @@ class Patrolling:
     def callback_amcl_pose(self, msg):
         #print("inside callback_amcl_pose")
         self.amcl_pose = msg
+
+
+    def callback_clicked_point(self, msg):
+        if(self.robot_ns == robot0_ns):
+            print("callback_clicked_point")
+            x = (math.floor(msg.point.x * pow(10, 4)) / pow(10, 4))
+            y = (math.floor(msg.point.y * pow(10, 4)) / pow(10, 4))
+            inserted_tupple = (x, y)
+            print("previous free goals: " + str(free_goals))
+            free_goals.insert(0, inserted_tupple)
+            print("new      free goals: " + str(free_goals))
 
 
     def publish_new_point(self, seq, x, y):
