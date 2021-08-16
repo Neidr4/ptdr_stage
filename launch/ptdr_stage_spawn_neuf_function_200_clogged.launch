@@ -28,11 +28,11 @@
     <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="-$(arg init_x_pos) -$(arg init_y_pos) 0 $(arg init_yaw) 0 0 /world $(arg robot_namespace)/map 100"/> -->
 
     <node pkg="tf" type="static_transform_publisher" name="map_to_$(arg robot_namespace)_map_tf_broadcaster" args="0 0 0 0 0 0 /world $(arg robot_namespace)/map 100"/>
-
+<!-- 
     <node name="map_server_$(arg robot_namespace)" pkg="map_server" type="map_server" args="$(arg map_file_empty)">
       <param name="frame_id" value="map"/>
     </node>
-  
+   -->
 
     <arg name="scan_topic"  value="base_scan" />
     <arg name="base_frame"  value="$(arg robot_namespace)/base_footprint"/>
@@ -209,6 +209,9 @@
       <param name="local_costmap/global_frame" value="$(arg odom_frame_id)"/>
       <param name="local_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
       <param name="DWAPlannerROS/global_frame_id" value="$(arg odom_frame_id)"/>
+
+      <param name="global_costmap/origin_x" value="$(arg init_x_pos)"/>
+      <param name="global_costmap/origin_y" value="$(arg init_y_pos)"/>
 
       <!-- remap from="cmd_vel" to="navigation_velocity_smoother/raw_cmd_vel"/ -->
       <remap from="odom" to="$(arg odom_topic)"/>
