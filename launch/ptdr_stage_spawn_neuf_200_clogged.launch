@@ -106,10 +106,13 @@
   <!-- ================================== -->
   <!-- =========== Merge Maps =========== -->
   <!-- ================================== -->
-  <!--
-  -->
-  <include file="$(find ptdr_stage)/launch/ptdr_stage_map_merge_clogged.launch"/>
 
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map_merged_tf_broadcaster" args="0 0 0 0 0 0 /world /map_merged 100"/>
+  -->
+<!-- 
+  <include file="$(find ptdr_stage)/launch/ptdr_stage_map_merge_clogged.launch"/>
+ -->
   <!-- ================================== -->
   <!-- ============= Display ============ -->
   <!-- ================================== -->

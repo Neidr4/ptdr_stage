@@ -4,7 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Grid1
         - /Grid1/Offset1
         - /TF1/Frames1
         - /TF1/Tree1
@@ -1413,7 +1412,7 @@ Visualization Manager:
       Marker Topic: /centroids
       Name: Marker
       Namespaces:
-        markers3: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -1421,7 +1420,7 @@ Visualization Manager:
       Marker Topic: /global_rrt_detector_shapes
       Name: Marker
       Namespaces:
-        markers: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true

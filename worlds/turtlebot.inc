@@ -24,6 +24,20 @@ define hokuyo ranger
   size [ 0.05 0.05 0.1 ]
 )
 
+define bonsoir camera
+(
+  # laser properties
+  resolution [ 640 800 ]
+  range [ 0.2 8.0 ]
+  fov [ 70.0 40.0 ]
+  pantilt [ 0.0 0.0 ]
+
+  # model properties
+  size [ 0.1 0.07 0.05 ]
+  color "black"
+  watts 100.0 # TODO find watts for sony pan-tilt camera
+)
+
 define turtlebot position
 (
   pose [ 0.0 0.0 0.0 0.0 ]
@@ -38,5 +52,6 @@ define turtlebot position
   
   #kinect(pose [ -0.1 0.0 -0.11 0.0 ])
   hokuyo(pose [ -0.1 0.0 -0.11 0.0 ])
+  #bonsoir(pose [ -0.1 0.0 -0.20 0.0 ])
 
 )

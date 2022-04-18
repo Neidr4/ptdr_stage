@@ -12,8 +12,6 @@ Panels:
         - /robot_11/Global Planning1
         - /robot_11/Path (global)1
         - /robot_21/Global Planning1
-        - /map_merged1
-        - /Map2
       Splitter Ratio: 0.502777755
     Tree Height: 843
   - Class: rviz/Selection
@@ -1382,12 +1380,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Map2
       Topic: /robot_2/map
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
@@ -1432,16 +1430,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 30.9370537
+      Distance: 19.8943481
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.36583829
-        Y: -0.414428204
-        Z: -0.517694175
+        X: 5.16544151
+        Y: 3.04027319
+        Z: -0.514241636
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
